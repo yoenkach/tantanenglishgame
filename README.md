@@ -1,1 +1,227 @@
-# tantanenglishgame
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>倓倓专属：U1-U6全境封锁题库版</title>
+    <style>
+        :root { --n-blue: #00f3ff; --n-purple: #bc13fe; --n-pink: #ff00ff; --bg: #05060f; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: 'PingFang SC', sans-serif; background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        header { padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.8); border-bottom: 2px solid var(--n-blue); box-shadow: 0 0 15px var(--n-blue); }
+        .container { flex: 1; display: flex; flex-direction: row; overflow: hidden; }
+        nav { width: 220px; background: rgba(0,0,0,0.3); padding: 15px; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid #333; overflow-y: auto; }
+        .nav-btn { padding: 12px; background: #1a1b3a; border: 1px solid #444; border-radius: 8px; color: #aaa; cursor: pointer; text-align: left; font-size: 0.85rem; }
+        .nav-btn.active { background: var(--n-purple); color: white; border: none; box-shadow: 0 0 10px var(--n-purple); }
+        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; position: relative; background: radial-gradient(circle at center, #1a1b3a 0%, #05060f 100%); }
+        .battle-card { width: 100%; max-width: 800px; background: rgba(20, 22, 45, 0.95); border-radius: 30px; padding: 30px; border: 2px solid var(--n-blue); position: relative; }
+        .q-tag { position: absolute; top: -15px; left: 30px; background: var(--n-blue); color: black; padding: 4px 12px; border-radius: 5px; font-weight: bold; font-size: 0.8rem; }
+        .q-text { font-size: 1.8rem; font-weight: bold; text-align: center; margin: 30px 0; min-height: 100px; display: flex; align-items: center; justify-content: center; line-height: 1.3; }
+        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
+        .opt { padding: 18px; background: rgba(255,255,255,0.05); border: 1px solid #444; border-radius: 15px; cursor: pointer; text-align: center; font-size: 1.05rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .opt:active { transform: scale(0.95); }
+        .opt.correct { background: #00ff88 !important; color: black; font-weight: bold; }
+        .opt.wrong { background: #ff4466 !important; color: white; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .pop { background: #1a1b3a; border: 3px solid var(--n-pink); border-radius: 20px; padding: 25px; width: 100%; max-width: 500px; }
+        .k-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin: 15px 0; text-align: left; line-height: 1.6; color: var(--n-blue); border-left: 4px solid var(--n-blue); font-size: 0.95rem; }
+        .close-btn { width: 100%; padding: 15px; background: var(--n-pink); border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; }
+        @media (max-width: 768px) { .container { flex-direction: column; } nav { width: 100%; height: 70px; flex-direction: row; } .nav-btn { min-width: 100px; font-size: 0.7rem; } .options { grid-template-columns: 1fr; } .q-text { font-size: 1.4rem; } }
+    </style>
+</head>
+<body>
+
+<header>
+    <div style="font-weight:900; color:var(--n-blue);">TANTAN ULTRA 7.0</div>
+    <div style="display:flex; gap:15px;">
+        <div id="hp-box">❤️❤️❤️❤️❤️</div>
+        <div id="xp-text" style="color:gold; font-weight:bold;">XP: 0</div>
+    </div>
+</header>
+
+<div class="container">
+    <nav id="unit-nav"></nav>
+    <main>
+        <div class="battle-card">
+            <div class="q-tag" id="q-tag">LOADING...</div>
+            <div class="q-text" id="q-text">点击开始战斗</div>
+            <div class="options" id="opt-box"></div>
+        </div>
+    </main>
+</div>
+
+<div class="overlay" id="k-overlay">
+    <div class="pop">
+        <h3 style="color:var(--n-pink); margin:0;">🛡️ 核心数据库修正</h3>
+        <div class="k-box" id="k-content"></div>
+        <button class="close-btn" onclick="closePop()">吸收并继续</button>
+    </div>
+</div>
+
+<script>
+// --- 倓倓：这是从你文档里全量提取的题库（已去重，包含所有细节） ---
+const RAW_DATA = [
+    // Unit 1
+    {u:1, q:"proposal (n.)", a:"建议; 提议", k:"propose (v.) 建议 -> proposal (n.)。搭配：write a proposal of protecting water"},
+    {u:1, q:"percentage (n.)", a:"百分比; 百分率", k:"问句：What percentage of an adult’s body is water?"},
+    {u:1, q:"lock up in ice", a:"锁在冰里", k:"lock up: 封存，锁住"},
+    {u:1, q:"make full use of time", a:"充分利用时间", k:"make use of: 利用; 使用"},
+    {u:1, q:"take in", a:"摄入，吸收", k:"How much water do we need to take in every day?"},
+    {u:1, q:"billion", a:"十亿", k:"2 billion (不加s); billions of dollars (数十亿，加s)"},
+    {u:1, q:"dripping tap", a:"滴水的水龙头", k:"drip (v.) -> dripping (adj.) 滴水的。fix a dripping tap 修理水龙头"},
+    {u:1, q:"satisfying (adj.)", a:"令人满意的", k:"satisfy (v.) -> satisfied (人感) / satisfying (物感)"},
+    {u:1, q:"supply sb. ___ sth.", a:"with", k:"supply sb. with sth. = supply sth. to sb. (给某人提供某物)"},
+    {u:1, q:"The more... the more...", a:"越...就越...", k:"The more water we use, the more energy is needed."},
+    {u:1, q:"What if somebody breaks the rules?", a:"如果有人打破规则怎么办？", k:"What if...? 表示假设：'假若...怎么办?'"},
+    {u:1, q:"amount of water", a:"水的数量", k:"the amount of + 不可数名词; the number of + 可数名词"},
+    {u:1, q:"thirsty (adj.)", a:"渴的", k:"thirst (v./n.) -> thirsty (adj.)"},
+    {u:1, q:"polluted (adj.)", a:"受污染的", k:"pollute (v.) -> pollution (n.) -> polluted (adj.)"},
+
+    // Unit 2
+    {u:2, q:"influence (v./n.)", a:"影响; 作用", k:"have an influence on sb./sth. 对...有影响 (=effect)"},
+    {u:2, q:"facial recognition", a:"人脸识别", k:"recognize (v.) -> recognition (n.)"},
+    {u:2, q:"technology (n.)", a:"技术; 工艺", k:"digital technology 数字技术; technical (adj.) 技术的"},
+    {u:2, q:"complain (v.)", a:"抱怨; 埋怨", k:"complain to sb. about sth. / complaint (n.) 投诉"},
+    {u:2, q:"freeze (v.)", a:"死机; 冻结", k:"三变：freeze-froze-frozen。My smartwatch keeps freezing."},
+    {u:2, q:"run out of space", a:"空间耗尽/不足", k:"My smartphone keeps running out of space."},
+    {u:2, q:"as soon as", a:"一...就...", k:"时间状语从句，遵循'主将从现'原则"},
+    {u:2, q:"warn sb. ___ sth.", a:"of", k:"warn sb. of sth. 警告某人某事; warn sb. (not) to do sth."},
+    {u:2, q:"in conclusion", a:"总而言之; 最后", k:"conclude (v.) -> conclusion (n.)"},
+    {u:2, q:"the disabled", a:"残疾人", k:"Digital technology makes life easier for the disabled."},
+    {u:2, q:"keep an eye on", a:"照看; 留意", k:"= care for"},
+    {u:2, q:"tablet (n.)", a:"平板电脑; 药片", k:"区别：table 桌子"},
+
+    // Unit 3
+    {u:3, q:"curious (adj.)", a:"好奇的", k:"be curious about... 对...好奇; curiosity (n.) 好奇心"},
+    {u:3, q:"be familiar with", a:"对...熟悉", k:"sb. be familiar with sth. / sth. be familiar to sb."},
+    {u:3, q:"ruin your eyesight", a:"毁掉视力", k:"Don't read in the dark, or you will ruin your eyesight."},
+    {u:3, q:"awake (adj.)", a:"醒着的", k:"stay awake 保持清醒; awake-awoke-awoken; wake sb. up"},
+    {u:3, q:"result in", a:"导致", k:"辨析：result in (后接结果) vs result from (后接原因)"},
+    {u:3, q:"turn out", a:"证明是; 结果是", k:"It turns out (that)... 事实证明..."},
+    {u:3, q:"be crazy about", a:"对...疯狂/着迷", k:"= be very interested in"},
+    {u:3, q:"have sth. in common", a:"有共同点", k:"I found that we have a lot in common."},
+    {u:3, q:"wonder (v.)", a:"想知道; 琢磨", k:"no wonder 难怪; I wonder what time the meeting starts."},
+    {u:3, q:"physics (n.)", a:"物理学", k:"physical (adj.) 身体的; 物理的; physicist (物理学家)"},
+
+    // Unit 4
+    {u:4, q:"belong to sb.", a:"属于某人", k:"注意：无被动语态，无进行时。The old player belongs to him."},
+    {u:4, q:"except", a:"除...之外(不包括)", k:"辨析：except (减法) vs besides (加法/包括)"},
+    {u:4, q:"The 19th century saw...", a:"19世纪经历了...", k:"saw在这里意为'见证/经历'，常以时间/地点作主语"},
+    {u:4, q:"decade (n.)", a:"十年", k:"over the next few decades 在接下来的几十年里"},
+    {u:4, q:"wealthy (adj.)", a:"富有的", k:"wealth (n.) 财富; the wealthy 富人"},
+    {u:4, q:"punish (v.)", a:"惩罚", k:"punishment (n.) 惩罚"},
+    {u:4, q:"electricity (n.)", a:"电; 电能", k:"electric (adj.) 电的; electric heater 电暖器"},
+    {u:4, q:"bring ... to life", a:"使...生动起来", k:"bring ancient objects to life 让古物活起来"},
+    {u:4, q:"imagine doing", a:"想象做某事", k:"imagination (n.) 想象力"},
+    {u:4, q:"borrow ... from", a:"向...借", k:"lend ... to 借给..."},
+
+    // Unit 5
+    {u:5, q:"never let you down", a:"永远不让你失望", k:"let sb. down = disappoint sb."},
+    {u:5, q:"passion (n.)", a:"酷爱; 热情", k:"be passionate about 对...充满热情; shared passion 共同的热爱"},
+    {u:5, q:"cooperate with others", a:"与他人合作", k:"cooperate (v.) -> cooperation (n.) 合作"},
+    {u:5, q:"take turns doing", a:"轮流做某事", k:"take turns to do / doing sth. 轮流做某事"},
+    {u:5, q:"disappointed (adj.)", a:"感到失望的", k:"be disappointed with/at 对某事感到失望"},
+    {u:5, q:"pull a long face", a:"拉长脸; 不高兴", k:"She pulled a long face when she failed."},
+    {u:5, q:"success (n.)", a:"成功", k:"succeed (v.) / successful (adj.) / successfully (adv.)"},
+    {u:5, q:"pay attention to", a:"注意; 专注", k:"注意to是介词，后接doing或名词"},
+    {u:5, q:"get along with", a:"与...相处", k:"get along well with sb."},
+
+    // Unit 6
+    {u:6, q:"accident (n.)", a:"事故; 意外", k:"accidental (adj.) -> accidentally (adv. 意外地)"},
+    {u:6, q:"security robot", a:"安保机器人", k:"secure (adj. 安全的) -> security (n. 安全/保安)"},
+    {u:6, q:"figure out", a:"弄懂; 计算出", k:"I can't figure out this math problem."},
+    {u:6, q:"unbelievable (adj.)", a:"难以置信的", k:"believe (v.) -> believable -> unbelievable"},
+    {u:6, q:"stop to do sth.", a:"停下来去做另一件事", k:"辨析：stop doing (停止正在做的) vs stop to do (去做新事)"},
+    {u:6, q:"unless", a:"除非; 如果不", k:"引导条件状语从句，unless = if...not"},
+    {u:6, q:"as long as", a:"只要", k:"引导条件状语从句。As long as you study, you will pass."},
+    {u:6, q:"improve health care", a:"改善医疗系统", k:"AI will help improve health care."}
+];
+
+let hp = 5, xp = 0, currentUnit = 0, audioCtx = null;
+
+function init() {
+    const nav = document.getElementById('unit-nav');
+    const labels = ["全部单元", "U1: 水资源", "U2: 数字生活", "U3: 好奇心", "U4: 过去与现在", "U5: 团队合作", "U6: 未来生活"];
+    labels.forEach((l, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'nav-btn' + (i===0?' active':'');
+        btn.innerText = l;
+        btn.onclick = (e) => {
+            currentUnit = i;
+            document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+            btn.classList.add('active');
+            nextQ();
+        };
+        nav.appendChild(btn);
+    });
+    nextQ();
+}
+
+function nextQ() {
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let pool = currentUnit === 0 ? RAW_DATA : RAW_DATA.filter(x => x.u === currentUnit);
+    const item = pool[Math.floor(Math.random() * pool.length)];
+    
+    document.getElementById('q-tag').innerText = "UNIT " + item.u;
+    document.getElementById('q-text').innerText = item.q;
+
+    let distractors = RAW_DATA.filter(x => x.a !== item.a).sort(() => 0.5 - Math.random()).slice(0, 3);
+    let options = [item, ...distractors].sort(() => 0.5 - Math.random());
+
+    const box = document.getElementById('opt-box');
+    box.innerHTML = '';
+    options.forEach(o => {
+        const div = document.createElement('div');
+        div.className = 'opt';
+        div.innerText = o.a;
+        div.onclick = () => check(o === item, div, item.k);
+        box.appendChild(div);
+    });
+}
+
+function check(isCorrect, el, k) {
+    if(isCorrect) {
+        el.classList.add('correct');
+        playSfx(880);
+        xp += 10;
+        updateUI();
+        setTimeout(nextQ, 600);
+    } else {
+        el.classList.add('wrong');
+        playSfx(220, 'square');
+        hp--;
+        updateUI();
+        if(hp <= 0) { alert("HP归零！系统重启中..."); location.reload(); }
+        else showPop(k);
+    }
+}
+
+function updateUI() {
+    document.getElementById('hp-box').innerText = '❤️'.repeat(hp);
+    document.getElementById('xp-text').innerText = 'XP: ' + xp;
+}
+
+function showPop(k) {
+    document.getElementById('k-content').innerText = k;
+    document.getElementById('k-overlay').style.display = 'flex';
+}
+
+function closePop() {
+    document.getElementById('k-overlay').style.display = 'none';
+    nextQ();
+}
+
+function playSfx(f, t='sine') {
+    if(!audioCtx) return;
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = t; o.frequency.value = f;
+    g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + 0.2);
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
